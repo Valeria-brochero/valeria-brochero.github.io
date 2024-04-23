@@ -1,0 +1,23 @@
+--Exercise 8 - Extended Business Query
+
+--Business question:
+/*
+Please retrieve the top 10 properties, not owned by owners from New York, that have more than 3 hours of service requests spent, ordered by the number of distinct services requested in ascending order, for service requests scheduled between January 1, 2023, and December 31, 2023? Additionally, for each of these properties, what are the maximum, minimum, and average estimated hours for their service requests, and what are the descriptions of the service categories for these requests?
+*/
+--Corresponding query: 
+
+SELECT TOP 10 P.PROPERTY_ID, 
+    COUNT(DISTINCT S.SERVICE_ID) AS NumberOfServices,
+    MAX(S.EST_HOURS) AS MaxEstimatedHours,
+    MIN(S.EST_HOURS) AS MinEstimatedHours,
+    AVG(S.EST_HOURS) AS AvgEstimatedHours,
+    (SELECT SC.CATEGORY_DESCRIPTION 
+	FROM SERVICE CATEGORY SC 
+		WHERE SC.CATEGORY_NUM = S.CATEGORY_NUMBER) AS ServiceCategory
+	FROM PROPERTY P INNER JOIN SERVICE REQUEST S ON P.PROPERTY_ID = S.PROPERTY_ID
+		WHERE P.OWNER_NUM NOT IN (SELECT OWNER_NUM FROM OWNER WHERE CITY = 'New York') AND
+    S.NEXT_SERVICE_DATE BETWEEN '2023-01-01' AND '2023-12-31' AND
+    S.STATUS IS NOT NULL
+		GROUP BY P.PROPERTY_ID
+		HAVING SUM SR.SPENT_HOURS > 3
+ORDER BY NumberOfServices ASC;
